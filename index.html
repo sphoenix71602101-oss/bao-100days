@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>给包的 100 天加油</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    background: linear-gradient(160deg, #FFF3E4 0%, #FFE1E7 52%, #FFEAD6 100%);
+    color: #6B4A3A;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+  #app {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* 背景漂浮气泡 */
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    opacity: .55;
+    filter: blur(1px);
+    pointer-events: none;
+    animation: blobFloat 9s ease-in-out infinite;
+  }
+  @keyframes blobFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-24px) scale(1.06); }
+  }
+
+  #fx {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 40;
+  }
+
+  #stage {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 22px 96px;
+  }
+  .scene-inner {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(22px) scale(.96);
+    transition: opacity .45s ease, transform .45s cubic-bezier(.22,1,.36,1);
+  }
+  .scene-inner.show {
+    opacity: 1;
+    transform: none;
+  }
+
+  .cat-wrap {
+    width: clamp(190px, 64vw, 310px);
+    animation: catFloat 4s ease-in-out infinite;
+    filter: drop-shadow(0 14px 18px rgba(139, 94, 60, .16));
+  }
+  .cat { width: 100%; height: auto; display: block; }
+  @keyframes catFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+  }
+  .eyes {
+    transform-origin: 120px 104px;
+    animation: blink 4.8s infinite;
+  }
+  @keyframes blink {
+    0%, 44%, 48%, 100% { transform: scaleY(1); }
+    46% { transform: scaleY(.08); }
+  }
+
+  .tag {
+    margin-top: 4px;
+    font-size: 13px;
+    letter-spacing: .22em;
+    color: #C98A5E;
+    background: rgba(255, 255, 255, .62);
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(201, 138, 94, .28);
+  }
+  .main {
+    margin: 18px 0 8px;
+    font-size: clamp(22px, 5.8vw, 30px);
+    line-height: 1.45;
+    font-weight: 700;
+    color: #6B4A3A;
+  }
+  .main b { color: #E86A8B; }
+  .sub {
+    margin: 0;
+    font-size: clamp(15px, 4.1vw, 18px);
+    line-height: 1.6;
+    color: #A97454;
+  }
+
+  /* 倒计时数字 */
+  .countdown {
+    margin-top: 10px;
+    font-size: clamp(64px, 19vw, 104px);
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -.03em;
+    background: linear-gradient(180deg, #F59AB0 0%, #E86A8B 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 8px 22px rgba(232, 106, 139, .22);
+  }
+  .countdown-label {
+    margin-top: 2px;
+    font-size: 16px;
+    color: #C98A5E;
+  }
+
+  /* 结尾贺卡 */
+  .card {
+    background: linear-gradient(180deg, #FFFDF8 0%, #FFF3EA 100%);
+    border: 2px solid rgba(201, 138, 94, .22);
+    border-radius: 26px;
+    padding: 34px 28px 28px;
+    box-shadow: 0 24px 50px rgba(139, 94, 60, .18);
+    width: 100%;
+    max-width: 420px;
+  }
+  .card .gong {
+    font-size: clamp(30px, 8vw, 40px);
+    font-weight: 800;
+    color: #D98A2B;
+    letter-spacing: .12em;
+  }
+  .card .line {
+    margin: 14px auto 4px;
+    font-size: 18px;
+    color: #6B4A3A;
+  }
+  .card .sign {
+    margin-top: 24px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: .18em;
+    color: #E86A8B;
+  }
+  .card .date {
+    margin-top: 6px;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: #C98A5E;
+  }
+
+  /* 控制按钮 */
+  #soundBtn {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 60;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid rgba(201, 138, 94, .28);
+    background: rgba(255, 255, 255, .7);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 18px rgba(139, 94, 60, .12);
+    transition: transform .2s ease, background .2s ease;
+  }
+  #soundBtn:active { transform: scale(.92); }
+  #soundHint {
+    position: absolute;
+    top: 24px;
+    right: 72px;
+    z-index: 60;
+    font-size: 13px;
+    color: #A97454;
+    background: rgba(255, 255, 255, .78);
+    border: 1px solid rgba(201, 138, 94, .24);
+    padding: 8px 12px;
+    border-radius: 999px;
+    animation: pulse 1.6s ease-in-out infinite;
+    cursor: pointer;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  #hint {
+    position: absolute;
+    bottom: 22px;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: .18em;
+    color: #B8835F;
+    animation: hintFloat 1.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes hintFloat {
+    0%, 100% { transform: translateY(0); opacity: .85; }
+    50% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  .replay {
+    margin-top: 22px;
+    border: 0;
+    background: #E86A8B;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    padding: 12px 26px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 10px 22px rgba(232, 106, 139, .28);
+  }
+  .replay:active { transform: scale(.96); }
+
+  @media (min-width: 760px) {
+    #stage { padding: 40px 24px 90px; }
+    .cat-wrap { width: 300px; }
+  }
+</style>
+</head>
+<body>
+  <div id="app">
+    <div id="stage"></div>
+    <canvas id="fx"></canvas>
+    <button id="soundBtn" aria-label="声音开关">🔇</button>
+    <div id="soundHint">点我开声音 🎵</div>
+    <div id="hint">点一下，继续</div>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // 目标日期与剩余天数
+    var TARGET = new Date(2026, 11, 19); // 2026-12-19
+    var now = new Date();
+    now.setHours(0, 0, 0, 0);
+    var DAYS = Math.max(0, Math.round((TARGET - now) / 86400000));
+
+    // 三套幽默文案（可通过 ?v=0/1/2 预览）
+    var COPY = [
+      [
+        { tag: "考研倒计时", text: "距离上岸，还有 <b>{n}</b> 天。", sub: "目标：2026-12-19，本喵已经举旗就位。" },
+        { tag: "心疼环节", text: "起得比鸡早，睡得比猫晚，咖啡当水喝，黑眼圈都快赶上本喵了。", sub: "但说真的，包辛苦啦。" },
+        { tag: "陪伴承诺", text: "你负责冲，BAO 负责端茶、递水、递真题——薯片？不存在的，划掉。", sub: "上岸后再补你一箱。" },
+        { tag: "信心充值", text: "能坚持到现在，你早就是隐藏学霸了，上岸只是时间问题。", sub: "本喵用猫格担保。" },
+        { tag: "上岸畅想", text: "考完那晚：睡到自然醒，吃顿大餐，再去想去的地方。", sub: "第一站，先抱抱你。" },
+        { tag: "金榜题名", text: "金榜题名 · 上岸成功！", sub: "倒计时归零那天，BAO 在这里等你凯旋。" }
+      ],
+      [
+        { tag: "进度条启动", text: "叮！距离上岸还有 <b>{n}</b> 天，倒计时正式开始！", sub: "目标日：2026-12-19，请勿点暂停。" },
+        { tag: "心疼环节", text: "别人在睡觉，你在背单词；别人在摸鱼，你在刷真题。你这不是卷，是偷偷变强。", sub: "就是少熬点夜，发际线很贵。" },
+        { tag: "陪伴承诺", text: "包安心冲，BAO 已开启「人形加油站」模式：端茶、递水、递真题，一条龙。", sub: "薯片先欠着，上岸后管够。" },
+        { tag: "信心充值", text: "你现在的知识储备，连本喵都害怕。稳住，你就是天选上岸人。", sub: "考场上不会就选 C——本喵乱说的。" },
+        { tag: "上岸畅想", text: "上岸之后：睡懒觉、吃火锅、到处浪，把这段苦日子统统补回来。", sub: "本喵申请当你的旅行跟班。" },
+        { tag: "金榜题名", text: "金榜题名 · 上岸成功！", sub: "恭喜解锁人生新地图，BAO 在终点给你放烟花。" }
+      ],
+      [
+        { tag: "倒计时", text: "<b>{n}</b> 天，足够把「可能」变成「一定」。", sub: "2026-12-19，我们一起去实现它。" },
+        { tag: "心疼你", text: "看见你一次次把书翻开、把题啃下来，就知道这份努力一定算数。", sub: "累的时候，可以停下来喘口气，这不丢人。" },
+        { tag: "陪伴承诺", text: "按你自己的节奏来就好，不用着急。BAO 一直在，给你加油，也给你依靠。", sub: "累了就靠过来充个电。" },
+        { tag: "相信你", text: "你比想象中更厉害，走到今天已经赢过很多人。剩下的，交给时间和你的坚持。", sub: "本喵对你有迷之自信。" },
+        { tag: "上岸畅想", text: "上岸以后，我们把欠下的好觉、大餐和旅行，一样一样补回来。", sub: "先睡它个三天三夜，我陪你。" },
+        { tag: "金榜题名", text: "金榜题名 · 上岸成功！", sub: "等你凯旋，BAO 在终点给你最大的拥抱。" }
+      ]
+    ];
+
+    var params = new URLSearchParams(location.search);
+    var v = parseInt(params.get("v"), 10);
+    if (!(v >= 0 && v < COPY.length)) v = 2;
+    var scenes = COPY[v];
+
+    var app = document.getElementById("app");
+    var stage = document.getElementById("stage");
+    var soundBtn = document.getElementById("soundBtn");
+    var soundHint = document.getElementById("soundHint");
+    var hint = document.getElementById("hint");
+    var canvas = document.getElementById("fx");
+    var ctx = canvas.getContext("2d");
+
+    var cur = -1;
+    var busy = false;
+
+    // ---------- 背景气泡 ----------
+    (function makeBlobs() {
+      var colors = ["#FFD9C0", "#FFC2D1", "#FFE8A3", "#D7F0E8"];
+      for (var i = 0; i < 7; i++) {
+        var b = document.createElement("div");
+        b.className = "blob";
+        var size = 40 + Math.random() * 110;
+        b.style.width = size + "px";
+        b.style.height = size + "px";
+        b.style.left = (Math.random() * 88) + "%";
+        b.style.top = (Math.random() * 88) + "%";
+        b.style.background = colors[i % colors.length];
+        b.style.animationDelay = (Math.random() * 4) + "s";
+        b.style.animationDuration = (7 + Math.random() * 5) + "s";
+        app.appendChild(b);
+      }
+    })();
+
+    // ---------- 小猫 SVG ----------
+    function accessory(i) {
+      if (i === 0) {
+        return '<g>' +
+          '<line x1="176" y1="152" x2="176" y2="66" stroke="#8B5E3C" stroke-width="5" stroke-linecap="round"/>' +
+          '<path d="M176 66 L224 76 L176 88 Z" fill="#FF8FA3" stroke="#8B5E3C" stroke-width="4" stroke-linejoin="round"/>' +
+          '<text x="183" y="82" font-size="13" font-weight="700" fill="#fff">上岸</text>' +
+          '</g>';
+      }
+      if (i === 1) {
+        return '<g>' +
+          '<g transform="translate(48,108)">' +
+          '<rect x="0" y="6" width="36" height="30" rx="9" fill="#FFFDF8" stroke="#8B5E3C" stroke-width="4"/>' +
+          '<path d="M36 14 Q50 16 36 28" fill="none" stroke="#8B5E3C" stroke-width="4"/>' +
+          '<path d="M6 20 Q10 12 14 20 M18 20 Q22 12 26 20" stroke="#8B5E3C" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+          '</g>' +
+          '<text x="76" y="72" font-size="16" font-weight="700" fill="#C98A5E">Z</text>' +
+          '<text x="94" y="58" font-size="12" font-weight="700" fill="#C98A5E">z</text>' +
+          '</g>';
+      }
+      if (i === 2) {
+        return '<g>' +
+          '<g transform="translate(56,118)">' +
+          '<rect x="0" y="0" width="32" height="26" rx="9" fill="#FFF6EC" stroke="#8B5E3C" stroke-width="4"/>' +
+          '<path d="M32 7 Q42 9 32 20" fill="none" stroke="#8B5E3C" stroke-width="4"/>' +
+          '<path d="M9 8 Q9 4 15 8 Q21 4 21 8" stroke="#E86A8B" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+          '</g>' +
+          '<path d="M168 142 c-3-8 10-14 14-6 c4-8 17-2 14 6 c-3 7 -14 10 -14 10 c0 0 -11 -3 -14 -10Z" fill="#F2777B" opacity=".9"/>' +
+          '</g>';
+      }
+      if (i === 3) {
+        return '<g>' +
+          '<path d="M54 54 l7 14 16 2 -12 10 4 16 -15 -9 -15 9 4 -16 -12 -10 16 -2Z" fill="#FFD166" stroke="#8B5E3C" stroke-width="3" stroke-linejoin="round"/>' +
+          '<rect x="150" y="26" width="74" height="38" rx="14" fill="#FFFDF8" stroke="#8B5E3C" stroke-width="4"/>' +
+          '<path d="M168 64 L161 82 L177 64" fill="#FFFDF8" stroke="#8B5E3C" stroke-width="4" stroke-linejoin="round"/>' +
+          '<text x="160" y="52" font-size="17" font-weight="700" fill="#6B4A3A">加油</text>' +
+          '</g>';
+      }
+      if (i === 4) {
+        return '<g>' +
+          '<circle cx="52" cy="52" r="15" fill="#FFD166" stroke="#8B5E3C" stroke-width="4"/>' +
+          '<g stroke="#8B5E3C" stroke-width="3" stroke-linecap="round">' +
+          '<line x1="52" y1="29" x2="52" y2="20"/><line x1="52" y1="75" x2="52" y2="84"/>' +
+          '<line x1="30" y1="52" x2="21" y2="52"/><line x1="74" y1="52" x2="83" y2="52"/>' +
+          '<line x1="36" y1="36" x2="30" y2="30"/><line x1="68" y1="36" x2="74" y2="30"/>' +
+          '<line x1="36" y1="68" x2="30" y2="74"/><line x1="68" y1="68" x2="74" y2="74"/>' +
+          '</g>' +
+          '</g>';
+      }
+      return '<g>' +
+        '<path d="M96 72 L112 22 L128 72 Z" fill="#FF8FA3" stroke="#8B5E3C" stroke-width="4" stroke-linejoin="round"/>' +
+        '<circle cx="112" cy="18" r="5" fill="#FFD166" stroke="#8B5E3C" stroke-width="3"/>' +
+        '<line x1="88" y1="72" x2="136" y2="72" stroke="#8B5E3C" stroke-width="4"/>' +
+        '<g fill="#FFD166"><rect x="62" y="86" width="8" height="8" rx="2" transform="rotate(25 62 86)"/></g>' +
+        '<g fill="#F2777B"><circle cx="182" cy="104" r="4"/></g>' +
+        '<g fill="#8BD3C7"><rect x="48" y="130" width="8" height="8" rx="2" transform="rotate(-15 48 130)"/></g>' +
+        '</g>';
+    }
+
+    function catSVG(i) {
+      return '<svg class="cat" viewBox="0 0 240 232" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M70 170 Q38 156 42 124" fill="none" stroke="#8B5E3C" stroke-width="6" stroke-linecap="round"/>' +
+        '<ellipse cx="120" cy="170" rx="50" ry="43" fill="#F7D9AE" stroke="#8B5E3C" stroke-width="6"/>' +
+        '<ellipse cx="120" cy="180" rx="28" ry="23" fill="#FFF3E2"/>' +
+        '<circle cx="120" cy="108" r="49" fill="#F7D9AE" stroke="#8B5E3C" stroke-width="6"/>' +
+        '<path d="M84 79 L69 32 L109 60 Z" fill="#F7D9AE" stroke="#8B5E3C" stroke-width="6" stroke-linejoin="round"/>' +
+        '<path d="M156 79 L171 32 L131 60 Z" fill="#F7D9AE" stroke="#8B5E3C" stroke-width="6" stroke-linejoin="round"/>' +
+        '<path d="M86 71 L78 47 L103 63 Z" fill="#F4A6A0"/>' +
+        '<path d="M154 71 L162 47 L137 63 Z" fill="#F4A6A0"/>' +
+        '<g class="eyes">' +
+          '<circle cx="100" cy="103" r="6.5" fill="#4A3728"/>' +
+          '<circle cx="140" cy="103" r="6.5" fill="#4A3728"/>' +
+          '<circle cx="102.5" cy="100.5" r="2" fill="#fff"/>' +
+          '<circle cx="142.5" cy="100.5" r="2" fill="#fff"/>' +
+        '</g>' +
+        '<ellipse cx="87" cy="123" rx="9" ry="5" fill="#F6A9A0" opacity=".75"/>' +
+        '<ellipse cx="153" cy="123" rx="9" ry="5" fill="#F6A9A0" opacity=".75"/>' +
+        '<path d="M110 121 Q114 128 120 121 Q126 128 130 121" fill="none" stroke="#8B5E3C" stroke-width="4" stroke-linecap="round"/>' +
+        '<g stroke="#8B5E3C" stroke-width="3" stroke-linecap="round" opacity=".7">' +
+          '<line x1="68" y1="108" x2="87" y2="112"/><line x1="68" y1="121" x2="87" y2="120"/>' +
+          '<line x1="172" y1="108" x2="153" y2="112"/><line x1="172" y1="121" x2="153" y2="120"/>' +
+        '</g>' +
+        '<ellipse cx="84" cy="170" rx="13" ry="11" fill="#F7D9AE" stroke="#8B5E3C" stroke-width="5"/>' +
+        '<ellipse cx="156" cy="170" rx="13" ry="11" fill="#F7D9AE" stroke="#8B5E3C" stroke-width="5"/>' +
+        accessory(i) +
+        '</svg>';
+    }
+
+    // ---------- 场景渲染 ----------
+    function render(i) {
+      var s = scenes[i];
+      var cat = catSVG(i);
+      var html;
+      if (i === 0) {
+        html =
+          '<div class="scene-inner">' +
+            '<div class="cat-wrap">' + cat + '</div>' +
+            '<div class="countdown" id="countdown">0</div>' +
+            '<div class="countdown-label">天 · 目标 2026-12-19</div>' +
+            '<div class="tag">' + s.tag + '</div>' +
+            '<div class="main">' + s.text.replace("{n}", "<b>" + DAYS + "</b>") + '</div>' +
+            '<div class="sub">' + s.sub + '</div>' +
+          '</div>';
+      } else if (i === scenes.length - 1) {
+        html =
+          '<div class="scene-inner">' +
+            '<div class="cat-wrap" style="width:clamp(150px,48vw,240px)">' + cat + '</div>' +
+            '<div class="card">' +
+              '<div class="gong">金榜题名</div>' +
+              '<div class="line">上岸成功 · 未来可期</div>' +
+              '<div class="sign">BAO</div>' +
+              '<div class="date">距离目标日 · 2026-12-19 · 还有 ' + DAYS + ' 天</div>' +
+            '</div>' +
+            '<button class="replay" id="replay">再玩一次</button>' +
+          '</div>';
+      } else {
+        html =
+          '<div class="scene-inner">' +
+            '<div class="cat-wrap">' + cat + '</div>' +
+            '<div class="tag">' + s.tag + '</div>' +
+            '<div class="main">' + s.text.replace("{n}", "<b>" + DAYS + "</b>") + '</div>' +
+            '<div class="sub">' + s.sub + '</div>' +
+          '</div>';
+      }
+      stage.innerHTML = html;
+      requestAnimationFrame(function () {
+        var inner = stage.firstElementChild;
+        if (inner) inner.classList.add("show");
+      });
+      if (i === 0) {
+        animateCountdown(document.getElementById("countdown"), DAYS);
+        soundHint.style.display = soundOn ? "none" : "block";
+      } else {
+        soundHint.style.display = "none";
+      }
+      hint.style.display = (i === scenes.length - 1) ? "none" : "block";
+      if (i === scenes.length - 1) {
+        startCelebration();
+      } else {
+        stopCelebration();
+      }
+    }
+
+    function next() {
+      if (busy) return;
+      busy = true;
+      cur = Math.min(cur + 1, scenes.length - 1);
+      render(cur);
+      setTimeout(function () { busy = false; }, 350);
+    }
+
+    function reset() {
+      cur = -1;
+      next();
+    }
+
+    function animateCountdown(el, target) {
+      if (!el) return;
+      var start = 0;
+      var dur = 1200;
+      var t0 = performance.now();
+      function frame(t) {
+        var p = Math.min(1, (t - t0) / dur);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * eased);
+        if (p < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // ---------- 背景音乐（Web Audio 合成轻柔钢琴琶音） ----------
+    var audioCtx = null;
+    var master = null;
+    var musicTimer = null;
+    var nextNoteTime = 0;
+    var step = 0;
+    var soundOn = false;
+
+    var chords = [
+      [261.63, 329.63, 392.00, 523.25],
+      [220.00, 261.63, 329.63, 440.00],
+      [174.61, 220.00, 261.63, 349.23],
+      [196.00, 246.94, 293.66, 392.00]
+    ];
+
+    function initAudio() {
+      if (audioCtx) return;
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      audioCtx = new AC();
+      master = audioCtx.createGain();
+      master.gain.value = 0.14;
+      master.connect(audioCtx.destination);
+    }
+
+    function note(freq, time, dur) {
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.type = "sine";
+      o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, time);
+      g.gain.exponentialRampToValueAtTime(0.5, time + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+      o.connect(g);
+      g.connect(master);
+      o.start(time);
+      o.stop(time + dur + 0.05);
+    }
+
+    function tick() {
+      if (!audioCtx) return;
+      while (nextNoteTime < audioCtx.currentTime + 0.35) {
+        var chord = chords[Math.floor(step / 4) % chords.length];
+        var n = step % 4;
+        note(chord[n], nextNoteTime, 1.1);
+        nextNoteTime += 60 / 72 / 2;
+        step++;
+      }
+    }
+
+    function startMusic() {
+      initAudio();
+      if (!audioCtx || musicTimer) return;
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      nextNoteTime = audioCtx.currentTime + 0.12;
+      musicTimer = setInterval(tick, 50);
+    }
+
+    function stopMusic() {
+      if (musicTimer) {
+        clearInterval(musicTimer);
+        musicTimer = null;
+      }
+    }
+
+    function setSound(on) {
+      soundOn = on;
+      soundBtn.textContent = on ? "🔊" : "🔇";
+      soundHint.style.display = (on || cur !== 0) ? "none" : "block";
+      if (on) startMusic();
+      else stopMusic();
+    }
+
+    // ---------- 烟花与彩带 ----------
+    var parts = [];
+    var celebrating = false;
+    var confettiTimer = null;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    function resizeCanvas() {
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    function spark(x, y, color, vx, vy, life) {
+      return { x: x, y: y, vx: vx, vy: vy, g: 0.09, life: life || 90, age: 0, color: color, size: 2 + Math.random() * 2.5 };
+    }
+
+    function confetti(x, y, color) {
+      return {
+        x: x, y: y,
+        vx: (Math.random() - 0.5) * 3,
+        vy: 2 + Math.random() * 4,
+        g: 0.03,
+        life: 180,
+        age: 0,
+        color: color,
+        size: 6 + Math.random() * 5,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.25
+      };
+    }
+
+    var PALETTE = ["#FF8FA3", "#FFD166", "#8BD3C7", "#F7A6D5", "#FFC2B0", "#A9C6FF"];
+
+    function fireworks(x, y) {
+      var color = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+      var count = 46;
+      for (var i = 0; i < count; i++) {
+        var ang = (Math.PI * 2 * i) / count + Math.random() * 0.18;
+        var sp = 2.4 + Math.random() * 4.2;
+        parts.push(spark(x, y, color, Math.cos(ang) * sp, Math.sin(ang) * sp, 70 + Math.random() * 30));
+      }
+    }
+
+    function confettiRain() {
+      var n = 18;
+      for (var i = 0; i < n; i++) {
+        var x = Math.random() * window.innerWidth;
+        var color = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+        parts.push(confetti(x, -12, color));
+      }
+    }
+
+    function startCelebration() {
+      if (celebrating) return;
+      celebrating = true;
+      var boom = 0;
+      var t = setTimeout(function fire() {
+        if (!celebrating) return;
+        fireworks(
+          window.innerWidth * (0.2 + Math.random() * 0.6),
+          window.innerHeight * (0.18 + Math.random() * 0.35)
+        );
+        boom++;
+        t = setTimeout(fire, 620 + Math.random() * 420);
+      }, 180);
+      confettiTimer = setInterval(confettiRain, 700);
+      confettiRain();
+    }
+
+    function stopCelebration() {
+      celebrating = false;
+      if (confettiTimer) {
+        clearInterval(confettiTimer);
+        confettiTimer = null;
+      }
+      parts.length = 0;
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    }
+
+    function loop() {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      for (var i = parts.length - 1; i >= 0; i--) {
+        var p = parts[i];
+        p.age++;
+        if (p.age > p.life) {
+          parts.splice(i, 1);
+          continue;
+        }
+        p.vx *= 0.985;
+        p.vy += p.g;
+        p.x += p.vx;
+        p.y += p.vy;
+        var alpha = 1 - p.age / p.life;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.fillStyle = p.color;
+        if (p.rot !== undefined) {
+          p.rot += p.vr;
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+        } else {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    // ---------- 事件 ----------
+    soundBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setSound(!soundOn);
+    });
+    soundHint.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setSound(true);
+    });
+
+    app.addEventListener("pointerdown", function (e) {
+      if (e.target.closest("#soundBtn") || e.target.closest("#soundHint") || e.target.closest("#replay")) return;
+      if (cur === scenes.length - 1) {
+        fireworks(e.clientX, e.clientY);
+        confettiRain();
+        return;
+      }
+      next();
+    });
+
+    document.addEventListener("click", function (e) {
+      if (e.target && e.target.id === "replay") {
+        e.stopPropagation();
+        reset();
+      }
+    });
+
+    // 启动
+    next();
+    setSound(false);
+  })();
+  </script>
+</body>
+</html>
